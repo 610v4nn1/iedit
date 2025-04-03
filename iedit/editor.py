@@ -92,21 +92,57 @@ class LatexEditor:
         You are an expert in academic writing and LaTeX. Please suggest improvements 
         to the following LaTeX text to make it more polished and suitable for top 
         scientific conferences. Focus on grammar, style, and clarity while preserving
-        all numerical values and LaTeX commands exactly. Format your response as a 
-        list of replacement pairs.
+        all numerical values and LaTeX commands exactly.
+
+        For each suggested change, format your response exactly as follows:
+        Original: <text to be replaced>
+        Suggestion: <improved text>
+
+        Only suggest changes that meaningfully improve the text. Preserve all LaTeX commands.
         
         TEXT:
         {chunk}
         """
         
-        response = self.bedrock.invoke_model(
-            modelId=self.model_id,
-            body=prompt.encode()
-        )
-        
-        # TODO: Parse model response into list of suggestions
-        # For now, return empty list
-        return []
+        try:
+            # Format request body according to Claude's requirements
+            request_body = {
+                "prompt": prompt,
+                "max_tokens_to_sample": 2000,
+                "temperature": 0.7,
+                "top_p": 1,
+                "anthropic_version": "bedrock-2023-05-31"
+            }
+            
+            import json
+            response = self.bedrock.invoke_model(
+                modelId=self.model_id,
+                body=json.dumps(request_body).encode()
+            )
+            
+            # Parse the response
+            response_body = json.loads(response.get('body').read().decode())
+            completion = response_body.get('completion', '')
+            
+            # Extract suggestions from completion
+            suggestions = []
+            lines = completion.strip().split('\n')
+            current_original = None
+            
+            for line in lines:
+                line = line.strip()
+                if line.startswith('Original:'):
+                    current_original = line[9:].strip()
+                elif line.startswith('Suggestion:') and current_original:
+                    suggestion = line[11:].strip()
+                    suggestions.append((current_original, suggestion))
+                    current_original = None
+                    
+            return suggestions
+            
+        except Exception as e:
+            click.echo(f"Error while getting suggestions: {str(e)}", err=True)
+            return []
         
     def _apply_suggestions(self, chunk: str, suggestions: List[Tuple[str, str]]) -> str:
         """
@@ -124,3 +160,6 @@ class LatexEditor:
             if click.confirm(f"Replace:\n{original}\nwith:\n{suggestion}"):
                 modified = modified.replace(original, suggestion)
         return modified
+
+
+
