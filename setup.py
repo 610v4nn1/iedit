@@ -8,7 +8,6 @@ setup(
         "click",
         "boto3",
         "botocore",
-        "difflib",
         "colorama",
     ],
     entry_points={
