@@ -4,6 +4,7 @@ Core LaTeX editing functionality
 import re
 import boto3
 import click
+import json
 from typing import List, Tuple, Optional
 
 class LatexEditor:
@@ -73,11 +74,67 @@ class LatexEditor:
         """
         
         try:
+            # Format the request body according to the model's requirements
+            if self.model.startswith('anthropic.claude'):
+                # Claude models require a specific format
+                request_body = {
+                    "prompt": f"\n\nHuman: {prompt}\n\nAssistant:",
+                    "max_tokens_to_sample": 2000,
+                    "temperature": 0.7,
+                    "top_p": 0.9
+                }
+            elif self.model.startswith('amazon.titan'):
+                # Titan models format
+                request_body = {
+                    "inputText": prompt,
+                    "textGenerationConfig": {
+                        "maxTokenCount": 2000,
+                        "temperature": 0.7,
+                        "topP": 0.9
+                    }
+                }
+            elif self.model.startswith('ai21'):
+                # AI21 models format
+                request_body = {
+                    "prompt": prompt,
+                    "maxTokens": 2000,
+                    "temperature": 0.7,
+                    "topP": 0.9
+                }
+            elif self.model.startswith('meta'):
+                # Meta models format
+                request_body = {
+                    "prompt": prompt,
+                    "max_gen_len": 2000,
+                    "temperature": 0.7,
+                    "top_p": 0.9
+                }
+            else:
+                # Default format as fallback
+                request_body = {
+                    "prompt": prompt,
+                    "max_tokens": 2000
+                }
+            
+            import json
             response = self.bedrock.invoke_model(
                 modelId=self.model,
-                body=prompt.encode()
+                body=json.dumps(request_body)
             )
-            suggestion = response['body'].decode().strip()
+            
+            response_body = json.loads(response['body'].read())
+            
+            # Extract the response based on the model
+            if self.model.startswith('anthropic.claude'):
+                suggestion = response_body.get('completion', '').strip()
+            elif self.model.startswith('amazon.titan'):
+                suggestion = response_body.get('results', [{}])[0].get('outputText', '').strip()
+            elif self.model.startswith('ai21'):
+                suggestion = response_body.get('completions', [{}])[0].get('data', {}).get('text', '').strip()
+            elif self.model.startswith('meta'):
+                suggestion = response_body.get('generation', '').strip()
+            else:
+                suggestion = str(response_body).strip()
             
             if suggestion and suggestion != "NONE" and suggestion != text:
                 return [(text, suggestion)]
