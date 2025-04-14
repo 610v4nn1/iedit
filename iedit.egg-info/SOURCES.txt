@@ -1,0 +1,8 @@
+LICENSE
+setup.py
+iedit.egg-info/PKG-INFO
+iedit.egg-info/SOURCES.txt
+iedit.egg-info/dependency_links.txt
+iedit.egg-info/entry_points.txt
+iedit.egg-info/requires.txt
+iedit.egg-info/top_level.txt
