@@ -55,20 +55,7 @@ def extract_latex_sections(content: str) -> List[str]:
     if start_pos < len(content):
         sections.append(content[start_pos:])
     
-    # Merge very small sections with the next one
-    merged_sections = []
-    buffer = ""
-    
-    for section in sections:
-        buffer += section
-        if len(buffer) >= 100 or section.strip().startswith('\\end{') or section.strip().startswith('\\section'):
-            merged_sections.append(buffer)
-            buffer = ""
-    
-    if buffer:
-        merged_sections.append(buffer)
-    
-    return merged_sections
+    return sections
 
 def preserve_numerical_values(text: str) -> Tuple[str, Dict[str, str]]:
     """
