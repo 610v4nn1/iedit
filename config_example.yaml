@@ -1,0 +1,12 @@
+# Example configuration file for iedit
+# Save this as ~/.iedit/config.yaml
+
+# AWS Configuration
+aws_profile: default  # AWS profile to use (optional)
+aws_region: us-east-1  # AWS region for Bedrock
+
+# Editor Configuration
+context_lines: 5  # Number of context lines to show around changes
+
+# Default Model
+default_model: anthropic.claude-v2  # Default model to use
