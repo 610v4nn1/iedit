@@ -35,7 +35,7 @@ def find_latex_files(directory: Path, recursive: bool = False) -> List[Path]:
     Find all LaTeX files in a directory.
     
     Args:
-        directory: Directory to search
+        directory: Base directory from which the search will start
         recursive: Whether to search recursively
         
     Returns:
